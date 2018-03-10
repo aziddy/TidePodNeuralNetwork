@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
+dir = os.path.dirname(os.path.realpath(__file__))
 
 
 # loading image data from directories into arrays
@@ -20,7 +21,7 @@ def load_data(data_directory):
         label_directory = os.path.join(data_directory, d)
         file_names = []
         for f in os.listdir(label_directory):
-            if f.endswith(".ppm"):
+            if f.endswith(".jpg"):
                 file_names.append(os.path.join(label_directory, f))
 
         for f in file_names:
@@ -28,30 +29,32 @@ def load_data(data_directory):
             labels.append(int(d))
     return images, labels
 
-ROOT_PATH = "/Users/alex/Desktop/TenserFlowPythonProject"
-train_data_directory = os.path.join(ROOT_PATH, "TrafficSigns/Training")
-test_data_directory = os.path.join(ROOT_PATH, "TrafficSigns/Testing")
+ROOT_PATH = "/Users/alex/Desktop/TenserFlowPythonProject/TidePodNeuralNetwork/"
+train_data_directory = os.path.join(ROOT_PATH, "TidePods/Training")
+test_data_directory = os.path.join(ROOT_PATH, "TidePods/Testing")
 
 images, labels = load_data(train_data_directory)
+imagesT, labelsT = load_data(test_data_directory)
 
-# Images resized to
-images28 = [transform.resize(image, (28,28)) for image in images]
 
-# From Python List to Speedy Numpy Array
-images28 = np.array(images28)
+def alter_images(imgArray):
+    print('kek')
+    # Images resized to
+    returnImgArray = [transform.resize(image, (50,50)) for image in imgArray]
+    # From Python List to Speedy Numpy Array
+    returnImgArray = np.array(returnImgArray)
+    
+    #images28 = rgb2gray(images28)
+    
+    return returnImgArray
+    
+images28 = alter_images(images)
+imagesTest = alter_images(imagesT)
 
-images28 = rgb2gray(images28)
-
-# Count the number of labels
-#print(len(set(labels)))
-
-traffic_signs = [300, 2250, 3650, 4000]
 
 # Get the unique labels 
 unique_labels = set(labels)
 
-# Initialize the figure
-plt.figure(figsize=(15, 15))
 
 
 print(images28[0][0])
@@ -60,14 +63,14 @@ print(images28[0][0])
 # HARD ASS TENSORFLOW SHIT THAT I HAVE NO FUCKING IDEA ABOUT
 
 # intialize placeholders
-x = tf.placeholder(dtype = tf.float32, shape = [None, 28, 28])
+x = tf.placeholder(dtype = tf.float32, shape = [None, 50, 50, 3], name="X")
 y = tf.placeholder(dtype = tf.int32, shape = [None])
 
 # Intialize placeholders 
 images_flat = tf.contrib.layers.flatten(x)
 
 # Fully conncted layer
-logits = tf.contrib.layers.fully_connected(images_flat, 62, tf.nn.relu)
+logits = tf.contrib.layers.fully_connected(images_flat, 3, tf.nn.relu)
 
 # Define a loss function
 loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels = y, logits = logits))
@@ -76,7 +79,7 @@ loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels = y,
 train_op = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
 
 # Convert logits to label indexes
-correct_pred = tf.argmax(logits, 1)
+correct_pred = tf.argmax(logits, 1, name="correct_pred")
 
 # Define an accuracy metric
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
@@ -91,33 +94,58 @@ print("PREDICTED_LABELS: ", correct_pred)
 tf.set_random_seed(1234);
 sess = tf.Session()
 
+# Let's create a Saver object
+# By default, the Saver handles every Variables related to the default graph
+all_saver = tf.train.Saver()
+
 sess.run(tf.global_variables_initializer())
 
-# Add ops to save and restore all the variables.
-#saver = tf.train.Saver()
 
-
-for i in range(201):
+for i in range(121):
 	print("EPOCH", i);
 	_, accuracy_val = sess.run([train_op, accuracy], feed_dict={x: images28, y: labels})
-	if(i % 10 == 0):
-		print("Loss: ", loss)
+	#if(i % 10 == 0):
+	print("Loss: ", loss)
+	print("reee:" , accuracy_val)
 	print("DONE WITH EPOCH")
+	
+#tf.add_to_collection("X", x)
+print(x)
 
+all_saver.save(sess, dir + '/data-all')
 
+	
+# WRITE CODE TO STOP WHEN ACCURACY IS 0 CONSISTANTLY
+	
+
+'''
 # Pick 10 random images
-sample_indexes = random.sample(range(len(images28)), 1)
+sample_indexes = random.sample(range(len(images28)), 10)
 # Store the 10 images using the randomed indexs
 sample_images = [images28[i] for i in sample_indexes]
 # Store the 10 asscotiated labels using the randomed indexs
 sample_labels = [labels[i] for i in sample_indexes]
+'''
+
+
+# Pick 10 random images
+sample_indexes = random.sample(range(len(imagesTest)), 10)
+# Store the 10 images using the randomed indexs
+sample_images = [imagesTest[i] for i in sample_indexes]
+# Store the 10 asscotiated labels using the randomed indexs
+sample_labels = [labelsT[i] for i in sample_indexes]
+
 
 # Run the "correct_pred" operation
 predicted = sess.run([correct_pred], feed_dict={x: sample_images})[0]
                         
 # Print the real and predicted labels
 print(sample_labels)
-print(predicted)
+print(predicted) # predicted label number
+
+
+
+
 
 # Display the predictions and the ground truth visually.
 fig = plt.figure(figsize=(10, 10))
@@ -129,7 +157,7 @@ for i in range(len(sample_images)):
     color='green' if truth == prediction else 'red'
     plt.text(40, 10, "Truth:        {0}\nPrediction: {1}".format(truth, prediction), 
              fontsize=12, color=color)
-    plt.imshow(sample_images[i],  cmap="gray")
+    plt.imshow(sample_images[i])
 
 plt.show()
 

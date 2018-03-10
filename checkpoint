@@ -1,0 +1,2 @@
+model_checkpoint_path: "/Users/alex/Desktop/TenserFlowPythonProject/TidePodNeuralNetwork/data-all"
+all_model_checkpoint_paths: "/Users/alex/Desktop/TenserFlowPythonProject/TidePodNeuralNetwork/data-all"
