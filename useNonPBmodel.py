@@ -42,45 +42,17 @@ def alter_images(imgArray):
     # From Python List to Speedy Numpy Array
     returnImgArray = np.array(returnImgArray)
     
-    #images28 = rgb2gray(images28)
-    
     return returnImgArray
     
 imagesTest = alter_images(imagesT)
 
 sess = tf.Session()
 
-
 saver = tf.train.import_meta_graph("/Users/alex/Desktop/TenserFlowPythonProject/TidePodNeuralNetwork/data-all.meta")
 saver.restore(sess, "/Users/alex/Desktop/TenserFlowPythonProject/TidePodNeuralNetwork/data-all")
 graph = tf.get_default_graph()       
 x = graph.get_operation_by_name('X').outputs[0]
 correct_pred = graph.get_operation_by_name('correct_pred').outputs[0]
-
-#x = graph.get_tensor_by_name('X:0')
-#predictions = sess.run(y_conv, feed_dict={x: patches,keep_prob: 1.0})
-
-
-
-
-'''
-saver = tf.train.import_meta_graph("/Users/alex/Desktop/TenserFlowPythonProject/TidePodNeuralNetwork/data-all.meta")
-sess = tf.Session()
-saver.restore(sess, "/Users/alex/Desktop/TenserFlowPythonProject/TidePodNeuralNetwork/data-all")
-graph = sess.graph
-print([node.name for node in graph.as_graph_def().node])
-#print([ node.value for node in graph.get_operations()])
-#print(graph.as_graph_def().node[0].name)
-
-for op in graph.get_operations(): 
-print (op.name(), op.value()) '''
-#x = tf.get_variable('X')
-
-#correct_pred = tf.get_default_graph().get_operation_by_name("ArgMax")
-#x = tf.get_default_graph().get_operation_by_name("Placeholder")
-
-
-
 
 
 # Pick 10 random images
@@ -89,11 +61,6 @@ sample_indexes = random.sample(range(len(imagesTest)), 10)
 sample_images = [imagesTest[i] for i in sample_indexes]
 # Store the 10 asscotiated labels using the randomed indexs
 sample_labels = [labelsT[i] for i in sample_indexes]
-
-#x = tf.get_variable("Placeholder")
-#correct_pred = tf.get_variable("ArgMax")
-
-print(x)
 
 # Run the "correct_pred" operation
 predicted = sess.run([correct_pred], feed_dict={x: sample_images})[0]
@@ -116,9 +83,3 @@ for i in range(len(sample_images)):
     plt.imshow(sample_images[i])
 
 plt.show()
-
-
-
-
-
-

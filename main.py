@@ -40,7 +40,7 @@ imagesT, labelsT = load_data(test_data_directory)
 def alter_images(imgArray):
     print('kek')
     # Images resized to
-    returnImgArray = [transform.resize(image, (50,50)) for image in imgArray]
+    returnImgArray = [transform.resize(image, (150,150)) for image in imgArray]
     # From Python List to Speedy Numpy Array
     returnImgArray = np.array(returnImgArray)
     
@@ -59,73 +59,68 @@ unique_labels = set(labels)
 
 print(images28[0][0])
 
+while(True):
+    # HARD ASS TENSORFLOW SHIT THAT I HAVE NO FUCKING IDEA ABOUT
 
-# HARD ASS TENSORFLOW SHIT THAT I HAVE NO FUCKING IDEA ABOUT
+    # intialize placeholders
+    x = tf.placeholder(dtype = tf.float32, shape = [None, 150, 150, 3], name="X")
+    y = tf.placeholder(dtype = tf.int32, shape = [None])
 
-# intialize placeholders
-x = tf.placeholder(dtype = tf.float32, shape = [None, 50, 50, 3], name="X")
-y = tf.placeholder(dtype = tf.int32, shape = [None])
+    # Intialize placeholders 
+    images_flat = tf.contrib.layers.flatten(x)
 
-# Intialize placeholders 
-images_flat = tf.contrib.layers.flatten(x)
+    # Fully conncted layer
+    logits = tf.contrib.layers.fully_connected(images_flat, 3, tf.nn.relu)
 
-# Fully conncted layer
-logits = tf.contrib.layers.fully_connected(images_flat, 3, tf.nn.relu)
+    # Define a loss function
+    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels = y, logits = logits))
 
-# Define a loss function
-loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels = y, logits = logits))
+    # Define an optimizer
+    train_op = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
 
-# Define an optimizer
-train_op = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+    # Convert logits to label indexes
+    correct_pred = tf.argmax(logits, 1, name="correct_pred")
 
-# Convert logits to label indexes
-correct_pred = tf.argmax(logits, 1, name="correct_pred")
-
-# Define an accuracy metric
-accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
-
-
-print("IMAGES_FLAT: ", images_flat)
-print("LOGITS: ", logits)
-print("LOSS: ", loss)
-print("PREDICTED_LABELS: ", correct_pred)
+    # Define an accuracy metric
+    accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 
-tf.set_random_seed(1234);
-sess = tf.Session()
-
-# Let's create a Saver object
-# By default, the Saver handles every Variables related to the default graph
-all_saver = tf.train.Saver()
-
-sess.run(tf.global_variables_initializer())
+    print("IMAGES_FLAT: ", images_flat)
+    print("LOGITS: ", logits)
+    print("LOSS: ", loss)
+    print("PREDICTED_LABELS: ", correct_pred)
 
 
-for i in range(121):
-	print("EPOCH", i);
-	_, accuracy_val = sess.run([train_op, accuracy], feed_dict={x: images28, y: labels})
-	#if(i % 10 == 0):
-	print("Loss: ", loss)
-	print("reee:" , accuracy_val)
-	print("DONE WITH EPOCH")
-	
-#tf.add_to_collection("X", x)
-print(x)
+    tf.set_random_seed(1234);
+    sess = tf.Session()
 
-all_saver.save(sess, dir + '/data-all')
+    # Let's create a Saver object
+    # By default, the Saver handles every Variables related to the default graph
+    all_saver = tf.train.Saver()
 
-	
-# WRITE CODE TO STOP WHEN ACCURACY IS 0 CONSISTANTLY
-	
+    sess.run(tf.global_variables_initializer())
 
-'''
-# Pick 10 random images
-sample_indexes = random.sample(range(len(images28)), 10)
-# Store the 10 images using the randomed indexs
-sample_images = [images28[i] for i in sample_indexes]
-# Store the 10 asscotiated labels using the randomed indexs
-sample_labels = [labels[i] for i in sample_indexes]
-'''
+
+    for i in range(121):
+        print("EPOCH", i);
+        _, accuracy_val = sess.run([train_op, accuracy], feed_dict={x: images28, y: labels})
+        #if(i % 10 == 0):
+        print("Loss: ", loss)
+        print("reee:" , accuracy_val)
+        print("DONE WITH EPOCH")
+       
+    # CODE TO STOP WHEN ACCURACY IS 0 CONSISTANTLY
+    if(accuracy_val>0.3):
+        print(x)
+        all_saver.save(sess, dir + '/data-all')
+        break
+
+
+
+    
+
+
+
 
 
 # Pick 10 random images
@@ -138,13 +133,11 @@ sample_labels = [labelsT[i] for i in sample_indexes]
 
 # Run the "correct_pred" operation
 predicted = sess.run([correct_pred], feed_dict={x: sample_images})[0]
-                        
+
+                     
 # Print the real and predicted labels
 print(sample_labels)
 print(predicted) # predicted label number
-
-
-
 
 
 # Display the predictions and the ground truth visually.

@@ -1,4 +1,7 @@
-/TidePods
+*.jpg
+*.JPG
+*.png
+*.PNG
 /TidePodsOLD_HAND_PICKED
 /PrepImageArea
 /ImageDownloadFolder
